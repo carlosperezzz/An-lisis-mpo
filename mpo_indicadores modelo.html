@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MPO 112 Andalucía — Análisis de Indicadores</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f7f8fa;
+    --border: #e2e6eb;
+    --border-strong: #c8cfd8;
+    --text: #1a2232;
+    --text-mid: #4a5568;
+    --text-muted: #8a96a8;
+    --rma: #1a56db;
+    --rma-light: #ebf0fd;
+    --rse: #0e9f6e;
+    --rse-light: #e8f9f3;
+    --and: #c27803;
+    --and-light: #fdf6e3;
+    --accent: #e74c3c;
+    --accent-light: #fdf0ee;
+    --ok: #27ae60;
+    --warn: #f39c12;
+    --danger: #e74c3c;
+    --tab-h: 42px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 13px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--text);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 52px;
+    border-bottom: 3px solid #2ecc71;
+  }
+  .header-logo {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    color: #2ecc71;
+  }
+  .header-sep { width: 1px; height: 24px; background: #ffffff30; }
+  .header-title { font-size: 13px; color: #ffffffaa; font-weight: 300; }
+  .header-fecha {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #ffffff60;
+    background: #ffffff10;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  /* ── TAB BAR ── */
+  .tabbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 24px;
+    gap: 2px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px #0000000a;
+  }
+  .tab {
+    height: var(--tab-h);
+    padding: 0 18px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active { color: var(--rma); border-bottom-color: var(--rma); }
+  .tab.active.rse-tab { color: var(--rse); border-bottom-color: var(--rse); }
+  .tab.active.ipr-tab { color: var(--and); border-bottom-color: var(--and); }
+  .tab .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-rma { background: var(--rma); }
+  .dot-rse { background: var(--rse); }
+  .dot-and { background: var(--and); }
+
+  /* ── MAIN CONTENT ── */
+  .main { padding: 20px 24px 40px; max-width: 1400px; margin: 0 auto; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--surface);
+    margin-bottom: 20px;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--rma);
+    background: var(--rma-light);
+  }
+  .upload-zone.loaded {
+    border-color: var(--ok);
+    background: #f0faf4;
+  }
+  .upload-zone.loaded-rse {
+    border-color: var(--rse);
+    background: var(--rse-light);
+  }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-label { font-size: 14px; font-weight: 500; color: var(--text-mid); }
+  .upload-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+  .upload-status { font-size: 13px; font-weight: 600; color: var(--ok); margin-top: 6px; }
+  input[type=file] { display: none; }
+
+  /* ── KPIS ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .kpi {
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+  }
+  .kpi-label { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .kpi-value { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--text); line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .kpi.highlight .kpi-value { color: var(--rma); }
+  .kpi.highlight-rse .kpi-value { color: var(--rse); }
+  .kpi.ok .kpi-value { color: var(--ok); }
+  .kpi.warn .kpi-value { color: var(--warn); }
+  .kpi.danger .kpi-value { color: var(--danger); }
+
+  /* ── SECTION TITLE ── */
+  .section-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  .section-head:first-of-type { margin-top: 0; }
+  .section-head h3 { font-size: 13px; font-weight: 600; color: var(--text); }
+  .section-badge {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .badge-rma { background: var(--rma-light); color: var(--rma); }
+  .badge-rse { background: var(--rse-light); color: var(--rse); }
+  .badge-and { background: var(--and-light); color: var(--and); }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: auto;
+    margin-bottom: 20px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead tr { background: var(--surface2); }
+  th {
+    padding: 8px 10px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th:first-child { text-align: center; }
+  th.center { text-align: center; }
+  td {
+    padding: 7px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text);
+  }
+  td:first-child {
+    text-align: center;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--text-mid);
+    font-family: var(--sans);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr.total-row td {
+    background: var(--surface2);
+    font-weight: 600;
+    border-top: 2px solid var(--border-strong);
+    color: var(--text);
+  }
+  tr.disabled { opacity: .35; }
+  tr.disabled td { color: var(--text-muted); }
+
+  .pct-cell { font-weight: 500; }
+  .pct-ok { color: var(--ok); }
+  .pct-warn { color: var(--warn); }
+  .pct-danger { color: var(--danger); }
+
+  /* ── HORA TOGGLE CONTROLS ── */
+  .toggle-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .toggle-section h4 {
+    font-size: 12px; font-weight: 600; color: var(--text-mid);
+    margin-bottom: 12px; text-transform: uppercase; letter-spacing: .4px;
+  }
+  .toggle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .toggle-col-title {
+    font-size: 11px; font-weight: 600;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .toggle-hours {
+    display: flex; flex-wrap: wrap; gap: 5px;
+  }
+  .hour-toggle {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 9px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--surface2);
+    color: var(--text-mid);
+    transition: all .12s;
+    user-select: none;
+  }
+  .hour-toggle:hover { border-color: var(--border-strong); }
+  .hour-toggle.active-rma { background: var(--rma-light); border-color: var(--rma); color: var(--rma); }
+  .hour-toggle.active-rse { background: var(--rse-light); border-color: var(--rse); color: var(--rse); }
+  .hour-toggle input { display: none; }
+  .toggle-check { font-size: 9px; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-sm {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-mid);
+    transition: all .12s;
+  }
+  .btn-sm:hover { background: var(--surface2); border-color: var(--border-strong); color: var(--text); }
+
+  /* ── IPR TABLES ── */
+  .ipr-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .ipr-grid.two-col { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) {
+    .ipr-grid, .ipr-grid.two-col { grid-template-columns: 1fr; }
+    .toggle-grid { grid-template-columns: 1fr; }
+  }
+  .ipr-card {
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .ipr-card-head {
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ipr-card-head.rma { background: var(--rma-light); color: var(--rma); }
+  .ipr-card-head.rse { background: var(--rse-light); color: var(--rse); }
+  .ipr-card-head.and { background: var(--and-light); color: var(--and); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── ANDLAUCIA ACUMULADO ── */
+  .acum-row td:nth-child(2), .acum-row td:nth-child(3),
+  .acum-row td:nth-child(4), .acum-row td:nth-child(5) {
+    background: #fffdf0;
+  }
+  td.and-col { background: var(--and-light) !important; color: var(--and) !important; font-weight: 600; }
+
+  /* ── ROW-LEVEL COMPLIANCE COLORING ── */
+  tr.row-fail td {
+    background: #fff5f5 !important;
+  }
+  tr.row-fail td:last-child {
+    background: #fde8e8 !important;
+    color: var(--danger) !important;
+    font-weight: 700;
+  }
+  tr.row-ok td {
+    background: #f4fcf7 !important;
+  }
+  tr.row-ok td:last-child {
+    background: #e8f7ed !important;
+    color: var(--ok) !important;
+    font-weight: 700;
+  }
+  tr.total-row.row-fail td {
+    background: #fde0e0 !important;
+  }
+  tr.total-row.row-fail td:last-child {
+    background: #f8c0c0 !important;
+    color: var(--danger) !important;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  tr.total-row.row-ok td {
+    background: #e0f5ea !important;
+  }
+  tr.total-row.row-ok td:last-child {
+    background: #c0ebd0 !important;
+    color: var(--ok) !important;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .nota {
+    font-size: 11px; color: var(--text-muted);
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    border-left: 3px solid var(--border-strong);
+    margin-top: -8px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-logo">112·MPO</span>
+  <div class="header-sep"></div>
+  <span class="header-title">Análisis de Indicadores de Prestación Operativa — 112 Andalucía</span>
+  <span class="header-fecha" id="fechaDisplay">Sin datos cargados</span>
+</div>
+
+<div class="tabbar">
+  <button class="tab active" onclick="showTab('rma')">
+    <span class="dot dot-rma"></span> RMA · Málaga
+  </button>
+  <button class="tab rse-tab" onclick="showTab('rse')">
+    <span class="dot dot-rse"></span> RSE · Sevilla
+  </button>
+  <button class="tab ipr-tab" onclick="showTab('ipr01')">
+    <span class="dot dot-and"></span> IPR02-1
+  </button>
+  <button class="tab ipr-tab" onclick="showTab('ipr03')">
+    <span class="dot dot-and"></span> IPR02-3
+  </button>
+  <button class="tab ipr-tab" onclick="showTab('ipr04')">
+    <span class="dot dot-and"></span> IPR02-4
+  </button>
+</div>
+
+<div class="main">
+
+  <!-- ══════════════════════════════ RMA ══════════════════════════════ -->
+  <div class="page active" id="page-rma">
+    <div class="upload-zone" id="drop-rma" onclick="document.getElementById('file-rma').click()">
+      <input type="file" id="file-rma" accept=".ods,.xlsx,.xls" onchange="loadFile('rma', this)">
+      <div class="upload-icon">📂</div>
+      <div class="upload-label">Cargar MPO — Regional de Málaga (RMA)</div>
+      <div class="upload-hint">Arrastra o haz clic · Formatos ODS / XLSX / XLS</div>
+      <div class="upload-status" id="status-rma"></div>
+    </div>
+
+    <div id="rma-content">
+      <div class="kpi-row" id="kpi-rma"></div>
+      <div class="section-head">
+        <h3>Información de llamadas por horas</h3>
+        <span class="section-badge badge-rma">RMA · Málaga</span>
+      </div>
+      <div class="table-wrap">
+        <table id="table-rma-main"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ RSE ══════════════════════════════ -->
+  <div class="page" id="page-rse">
+    <div class="upload-zone loaded-rse" id="drop-rse" onclick="document.getElementById('file-rse').click()">
+      <input type="file" id="file-rse" accept=".ods,.xlsx,.xls" onchange="loadFile('rse', this)">
+      <div class="upload-icon">📂</div>
+      <div class="upload-label">Cargar MPO — Regional de Sevilla (RSE)</div>
+      <div class="upload-hint">Arrastra o haz clic · Formatos ODS / XLSX / XLS</div>
+      <div class="upload-status" id="status-rse"></div>
+    </div>
+
+    <div id="rse-content">
+      <div class="kpi-row" id="kpi-rse"></div>
+      <div class="section-head">
+        <h3>Información de llamadas por horas</h3>
+        <span class="section-badge badge-rse">RSE · Sevilla</span>
+      </div>
+      <div class="table-wrap">
+        <table id="table-rse-main"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ IPR02-1 ══════════════════════════════ -->
+  <div class="page" id="page-ipr01">
+    <div class="toggle-section">
+      <h4>🎛 Filtro de franjas horarias — activa/desactiva para recalcular</h4>
+      <div class="toggle-grid">
+        <div>
+          <div class="toggle-col-title"><span class="dot dot-rma"></span> RMA · Málaga</div>
+          <div class="toggle-hours" id="toggles-rma-01"></div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="toggleAll('rma','01',true)">Todas ✓</button>
+            <button class="btn-sm" onclick="toggleAll('rma','01',false)">Ninguna</button>
+          </div>
+        </div>
+        <div>
+          <div class="toggle-col-title"><span class="dot dot-rse"></span> RSE · Sevilla</div>
+          <div class="toggle-hours" id="toggles-rse-01"></div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="toggleAll('rse','01',true)">Todas ✓</button>
+            <button class="btn-sm" onclick="toggleAll('rse','01',false)">Ninguna</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="nota">IPR02-1 — % LL.E.D. Atendidas sobre (LL.E.D. – LL.N.A. con T.E.S. &lt; 12''). El denominador excluye las llamadas no atendidas con tiempo de espera inferior a 12 segundos.</p>
+    <div class="ipr-grid">
+      <div class="ipr-card">
+        <div class="ipr-card-head rma">RMA · Málaga</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr01-rma"></table>
+        </div>
+      </div>
+      <div class="ipr-card">
+        <div class="ipr-card-head rse">RSE · Sevilla</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr01-rse"></table>
+        </div>
+      </div>
+      <div class="ipr-card">
+        <div class="ipr-card-head and">ANDALUCÍA · Acumulado</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr01-and"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ IPR02-3 ══════════════════════════════ -->
+  <div class="page" id="page-ipr03">
+    <div class="toggle-section">
+      <h4>🎛 Filtro de franjas horarias — activa/desactiva para recalcular</h4>
+      <div class="toggle-grid">
+        <div>
+          <div class="toggle-col-title"><span class="dot dot-rma"></span> RMA · Málaga</div>
+          <div class="toggle-hours" id="toggles-rma-03"></div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="toggleAll('rma','03',true)">Todas ✓</button>
+            <button class="btn-sm" onclick="toggleAll('rma','03',false)">Ninguna</button>
+          </div>
+        </div>
+        <div>
+          <div class="toggle-col-title"><span class="dot dot-rse"></span> RSE · Sevilla</div>
+          <div class="toggle-hours" id="toggles-rse-03"></div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="toggleAll('rse','03',true)">Todas ✓</button>
+            <button class="btn-sm" onclick="toggleAll('rse','03',false)">Ninguna</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="nota">IPR02-3 — Tiempo Medio de Respuesta al Ciudadano (T.M.R.C.) = Tiempo Total de Respuesta al Ciudadano ÷ LL.E.D. Atendidas.</p>
+    <div class="ipr-grid">
+      <div class="ipr-card">
+        <div class="ipr-card-head rma">RMA · Málaga</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr03-rma"></table>
+        </div>
+      </div>
+      <div class="ipr-card">
+        <div class="ipr-card-head rse">RSE · Sevilla</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr03-rse"></table>
+        </div>
+      </div>
+      <div class="ipr-card">
+        <div class="ipr-card-head and">ANDALUCÍA · Acumulado</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr03-and"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ IPR02-4 ══════════════════════════════ -->
+  <div class="page" id="page-ipr04">
+    <div class="toggle-section">
+      <h4>🎛 Filtro de franjas horarias — activa/desactiva para recalcular</h4>
+      <div class="toggle-grid">
+        <div>
+          <div class="toggle-col-title"><span class="dot dot-rma"></span> RMA · Málaga</div>
+          <div class="toggle-hours" id="toggles-rma-04"></div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="toggleAll('rma','04',true)">Todas ✓</button>
+            <button class="btn-sm" onclick="toggleAll('rma','04',false)">Ninguna</button>
+          </div>
+        </div>
+        <div>
+          <div class="toggle-col-title"><span class="dot dot-rse"></span> RSE · Sevilla</div>
+          <div class="toggle-hours" id="toggles-rse-04"></div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="toggleAll('rse','04',true)">Todas ✓</button>
+            <button class="btn-sm" onclick="toggleAll('rse','04',false)">Ninguna</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="nota">IPR02-4 — % de LL.E.D. Atendidas con Tiempo de Respuesta al Ciudadano (T.R.C.) &lt; 10 segundos sobre el total de LL.E.D. Atendidas.</p>
+    <div class="ipr-grid">
+      <div class="ipr-card">
+        <div class="ipr-card-head rma">RMA · Málaga</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr04-rma"></table>
+        </div>
+      </div>
+      <div class="ipr-card">
+        <div class="ipr-card-head rse">RSE · Sevilla</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr04-rse"></table>
+        </div>
+      </div>
+      <div class="ipr-card">
+        <div class="ipr-card-head and">ANDALUCÍA · Acumulado</div>
+        <div class="table-wrap" style="border:none;border-radius:0;margin:0">
+          <table id="t-ipr04-and"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ── SheetJS for file parsing ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let DATA = { rma: null, rse: null };
+
+// active[centro][ipr] = Set of active horas
+let active = {
+  rma: { '01': new Set(), '03': new Set(), '04': new Set() },
+  rse: { '01': new Set(), '03': new Set(), '04': new Set() }
+};
+
+// ═══════════════════════════════════════════════════════
+//  TAB NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const tabs = document.querySelectorAll('.tab');
+  const labels = ['rma','rse','ipr01','ipr03','ipr04'];
+  tabs[labels.indexOf(id)].classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILE LOADING
+// ═══════════════════════════════════════════════════════
+function loadFile(centro, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+
+      // Priority: "DATOS PARA INFORME" sheet (real MPO), else fallback to RMA/RSE/datos name
+      const sheetName =
+        wb.SheetNames.find(n => n.toUpperCase().includes('DATOS PARA INFORME')) ||
+        wb.SheetNames.find(n => n.toUpperCase().includes('DATOS PARA')) ||
+        wb.SheetNames.find(n => /^(RMA|RSE)$/i.test(n.trim())) ||
+        wb.SheetNames.find(n => n.toLowerCase().includes('datos')) ||
+        wb.SheetNames[0];
+
+      const ws = wb.Sheets[sheetName];
+      const parsed = parseSheet(ws);
+      if (parsed && parsed.rows.length > 0) {
+        DATA[centro] = parsed;
+        document.getElementById('status-' + centro).textContent =
+          `✓ ${file.name}  ·  ${parsed.fecha}  ·  ${parsed.rows.length} franjas`;
+        document.getElementById('drop-' + centro).classList.add('loaded');
+        refreshAll();
+      } else {
+        alert('No se encontraron datos en el formato esperado.\nHoja usada: ' + sheetName);
+      }
+    } catch(err) {
+      alert('Error al leer el archivo: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseSheet(ws) {
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // ── Localizar fila de cabecera ──
+  // Buscamos la fila que contenga "IPR02-3" o "IPR02-1%" (cabecera de indicadores)
+  // La fila de datos empieza inmediatamente debajo
+  let headerRow = -1;
+  let fecha = '';
+
+  for (let r = range.s.r; r <= Math.min(range.e.r, 20); r++) {
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = ws[XLSX.utils.encode_cell({r, c})];
+      if (!cell) continue;
+      const v = String(cell.v || '');
+      if (v.includes('IPR02-3') || v.includes('IPR02-1%')) {
+        headerRow = r;
+        // Fecha: col 1 de esta misma fila
+        const fc = ws[XLSX.utils.encode_cell({r, c: 1})];
+        if (fc) {
+          const fv = fc.v;
+          if (fv instanceof Date) fecha = fv.toISOString().slice(0,10);
+          else if (typeof fv === 'number') {
+            // Excel date serial
+            const d = new Date(Math.round((fv - 25569) * 86400 * 1000));
+            fecha = d.toISOString().slice(0,10);
+          } else fecha = String(fv).slice(0,10);
+        }
+        break;
+      }
+    }
+    if (headerRow >= 0) break;
+  }
+  if (headerRow < 0) return null;
+
+  // ── Mapear columnas por posición fija (verificada en todos los MPO) ──
+  // col 1: hora  col 3: LLED  col 4: LLA  col 6: LLNA
+  // col 7: LLNA_AP  col 8: LLNA_NAP  col 9: TMA  col 10: TMR
+  // col 12: TMRC (IPR02-3)  col 13: % LLA/LLED
+  // col 14: IPR02-1%  col 15: base IPR02-1
+  // col 16: LLOp  col 19: LLFilt  col 32: Logados
+  // col 35: LLA_TRC_lt10  col 36: IPR02-4%
+  // Verificamos dinámicamente pero con fallback a posiciones fijas
+  const CM = {LLA:4, LLED:3, LLE:2, LLNA:6, LLNA_AP:7, LLNA_NAP:8,
+              TMA:9, TMR:10, TMRC:12, IPR01_pct:14, IPR01_base:15,
+              LLOp:16, LLFilt:19, Logados:32, LLA_TRC_lt10:35, IPR04_pct:36};
+
+  // Dynamic column detection (override fixed positions if found)
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = ws[XLSX.utils.encode_cell({r: headerRow, c})];
+    if (!cell) continue;
+    const v = String(cell.v || '');
+    if (v === 'LL.E.D. Atendidas (LL.A.) por línea 112') CM.LLA = c;
+    if (v.includes('Llamadas Entrantes Distribuibles')) CM.LLED = c;
+    if (v.includes('Llamadas Entrantes (LL.E.) por')) CM.LLE = c;
+    if (v.includes('No Atendidas (LL.N.A.) por línea') && !v.includes('A.P.') && !v.includes('N.A.P.') && !v.includes('%')) CM.LLNA = c;
+    if (v.includes('Asignadas a Puesto (A.P.) por línea')) CM.LLNA_AP = c;
+    if (v.includes('No Asignadas a Puesto (N.A.P.)')) CM.LLNA_NAP = c;
+    if (v.includes('Tiempo Medio de Asignación')) CM.TMA = c;
+    if (v.includes('Tiempo Medio de Respuesta (T.M.R.)')) CM.TMR = c;
+    if (v.includes('IPR02-3') && v.includes('T.M.R.C.')) CM.TMRC = c;
+    if (v.startsWith('IPR02-1%') || (v.includes('IPR02-1') && v.includes('%'))) CM.IPR01_pct = c;
+    if (v.includes('LL.N.A. con T.E.S. < 12') && !v.includes('%') && !v.includes('IPR')) CM.IPR01_base = c;
+    if (v === 'Llamadas Operativas') CM.LLOp = c;
+    if (v === 'Llamadas Filtradas') CM.LLFilt = c;
+    if (v.includes('Nº de LL.A. con T.R.C. < 10')) CM.LLA_TRC_lt10 = c;
+    if (v.includes('IPR02-4 %')) CM.IPR04_pct = c;
+    if (v === 'Logados') CM.Logados = c;
+  }
+
+  const get = (r, col) => {
+    if (col === undefined || col === null) return null;
+    const cell = ws[XLSX.utils.encode_cell({r, c: col})];
+    if (!cell || cell.v === '' || cell.v === null || cell.v === undefined) return null;
+    const n = typeof cell.v === 'number' ? cell.v : parseFloat(String(cell.v).replace(',','.'));
+    return isNaN(n) ? null : n;
+  };
+
+  const rows = [];
+
+  for (let r = headerRow + 1; r <= range.e.r; r++) {
+    const horaCell = ws[XLSX.utils.encode_cell({r, c: 1})];
+    if (!horaCell || horaCell.v === null || horaCell.v === undefined) continue;
+
+    const hv = horaCell.v;
+    // Accept: string '00'-'23', number 0-23
+    let horaInt;
+    if (typeof hv === 'string') {
+      const s = hv.trim();
+      if (!/^\d{1,2}$/.test(s)) continue; // skip 'TOTAL', text, etc.
+      horaInt = parseInt(s);
+    } else if (typeof hv === 'number') {
+      horaInt = Math.round(hv);
+    } else continue;
+
+    if (horaInt < 0 || horaInt > 23) continue;
+    const hora = String(horaInt).padStart(2, '0');
+
+    const lla  = get(r, CM.LLA);
+    const tmrc = get(r, CM.TMRC);
+    // TTRC = TMRC * LLA (tiempo total respuesta al ciudadano)
+    const ttrc = (lla != null && tmrc != null) ? lla * tmrc : null;
+
+    rows.push({
+      hora,
+      LLE:  get(r, CM.LLE),
+      LLED: get(r, CM.LLED),
+      LLA:  lla,
+      LLNA: get(r, CM.LLNA),
+      LLNA_AP:  get(r, CM.LLNA_AP),
+      LLNA_NAP: get(r, CM.LLNA_NAP),
+      TMA:  get(r, CM.TMA),
+      TMR:  get(r, CM.TMR),
+      TMRC: tmrc,
+      IPR01_pct:  get(r, CM.IPR01_pct),
+      IPR01_base: get(r, CM.IPR01_base),
+      LLOp:  get(r, CM.LLOp),
+      LLFilt: get(r, CM.LLFilt),
+      Logados: get(r, CM.Logados),
+      LLA_TRC_lt10: get(r, CM.LLA_TRC_lt10),
+      IPR04_pct: get(r, CM.IPR04_pct),
+      TTRC: ttrc
+    });
+  }
+
+  return rows.length ? { fecha, rows } : null;
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+const n0 = v => v == null ? '—' : Math.round(v).toLocaleString('es-ES');
+const n2 = v => v == null ? '—' : v.toFixed(2).replace('.', ',');
+const pct = v => v == null ? '—' : v.toFixed(2).replace('.', ',') + '%';
+
+// ── UMBRALES OBJETIVO ──
+// IPR02-1: objetivo >= 98.50%  → rojo si < 98.50
+// IPR02-3: objetivo <= 5″      → rojo si > 5
+// IPR02-4: objetivo >= 93%     → rojo si < 93
+
+function ipr01Class(v) {
+  if (v == null) return '';
+  return v >= 98.50 ? 'pct-ok' : 'pct-danger';
+}
+function ipr03Class(v) {
+  if (v == null) return '';
+  return v <= 5 ? 'pct-ok' : 'pct-danger';
+}
+function ipr04Class(v) {
+  if (v == null) return '';
+  return v >= 93 ? 'pct-ok' : 'pct-danger';
+}
+
+// Genérica (para tablas RMA/RSE de resumen, no IPR)
+function pctClass(v, thresholds) {
+  if (v == null) return '';
+  if (v >= thresholds[0]) return 'pct-ok';
+  if (v >= thresholds[1]) return 'pct-warn';
+  return 'pct-danger';
+}
+function tmrcClass(v) {
+  if (v == null) return '';
+  return v <= 5 ? 'pct-ok' : 'pct-danger';
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER MAIN TABLE (RMA/RSE)
+// ═══════════════════════════════════════════════════════
+function renderMainTable(centro) {
+  const d = DATA[centro];
+  const tbl = document.getElementById('table-' + centro + '-main');
+  const kpiEl = document.getElementById('kpi-' + centro);
+  if (!d) { tbl.innerHTML = ''; kpiEl.innerHTML = ''; return; }
+
+  // KPIs
+  const rows = d.rows;
+  const totLLED = rows.reduce((s,r) => s + (r.LLED||0), 0);
+  const totLLA  = rows.reduce((s,r) => s + (r.LLA||0), 0);
+  const totLLNA = rows.reduce((s,r) => s + (r.LLNA||0), 0);
+  const totTTRC = rows.reduce((s,r) => s + (r.TTRC||0), 0);
+  const tmrcGlobal = totLLA > 0 ? totTTRC / totLLA : null;
+  const pctAtend = totLLED > 0 ? (totLLA / totLLED) * 100 : null;
+
+  const cls = centro === 'rma' ? 'highlight' : 'highlight-rse';
+  kpiEl.innerHTML = `
+    <div class="kpi ${cls}"><div class="kpi-label">LL.E.D. Total</div><div class="kpi-value">${n0(totLLED)}</div><div class="kpi-sub">Llamadas distribuibles</div></div>
+    <div class="kpi ${cls}"><div class="kpi-label">LL.A. Total</div><div class="kpi-value">${n0(totLLA)}</div><div class="kpi-sub">Llamadas atendidas</div></div>
+    <div class="kpi"><div class="kpi-label">LL.N.A. Total</div><div class="kpi-value">${n0(totLLNA)}</div><div class="kpi-sub">No atendidas</div></div>
+    <div class="kpi ${pctAtend >= 90 ? 'ok' : pctAtend >= 85 ? 'warn' : 'danger'}"><div class="kpi-label">% Atendidas</div><div class="kpi-value">${pct(pctAtend)}</div><div class="kpi-sub">LL.A. / LL.E.D.</div></div>
+    <div class="kpi ${tmrcGlobal <= 5 ? 'ok' : tmrcGlobal <= 8 ? 'warn' : 'danger'}"><div class="kpi-label">T.M.R.C. Global</div><div class="kpi-value">${n2(tmrcGlobal)}″</div><div class="kpi-sub">Tiempo medio respuesta</div></div>
+    <div class="kpi"><div class="kpi-label">Fecha MPO</div><div class="kpi-value" style="font-size:14px">${d.fecha}</div><div class="kpi-sub">Día de servicio</div></div>
+  `;
+
+  // Table
+  tbl.innerHTML = `<thead><tr>
+    <th class="center">Hora</th>
+    <th>LL.E.D.</th><th>LL.A.</th><th>LL.N.A.</th><th>N.A.P.</th>
+    <th>T.M.A.″</th><th>T.M.R.″</th>
+    <th title="IPR02-3: objetivo ≤ 5″">TMRC″ ③</th>
+    <th>% LL.A./LLED</th>
+    <th title="IPR02-1: objetivo ≥ 98,50%">IPR02-1 % ①</th>
+    <th>LL.Oper.</th><th>LL.Filt.</th>
+    <th title="IPR02-4: objetivo ≥ 93%">IPR02-4 % ④</th>
+  </tr></thead><tbody>${
+    rows.map(r => `<tr>
+      <td>${r.hora}h</td>
+      <td>${n0(r.LLED)}</td><td>${n0(r.LLA)}</td><td>${n0(r.LLNA)}</td><td>${n0(r.LLNA_NAP)}</td>
+      <td>${n2(r.TMA)}</td><td>${n2(r.TMR)}</td>
+      <td class="pct-cell ${ipr03Class(r.TMRC)}">${n2(r.TMRC)}</td>
+      <td class="pct-cell ${pctClass(r.LLED > 0 ? (r.LLA/r.LLED)*100 : null, [90,85])}">${r.LLED ? pct(r.LLA/r.LLED*100) : '—'}</td>
+      <td class="pct-cell ${ipr01Class(r.IPR01_pct)}">${pct(r.IPR01_pct)}</td>
+      <td>${n0(r.LLOp)}</td><td>${n0(r.LLFilt)}</td>
+      <td class="pct-cell ${ipr04Class(r.IPR04_pct)}">${pct(r.IPR04_pct)}</td>
+    </tr>`).join('')
+  }</tbody>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  HOUR TOGGLES
+// ═══════════════════════════════════════════════════════
+function buildToggles(centro, ipr) {
+  const d = DATA[centro];
+  if (!d) return;
+  const container = document.getElementById(`toggles-${centro}-${ipr}`);
+  if (!container) return;
+
+  const horas = d.rows.map(r => r.hora);
+  // init all active
+  active[centro][ipr] = new Set(horas);
+
+  container.innerHTML = horas.map(h => `
+    <div class="hour-toggle active-${centro}" id="toggle-${centro}-${ipr}-${h}"
+         data-active="1" onclick="toggleHora('${centro}','${ipr}','${h}',this)">
+      ✓ ${h}h
+    </div>`).join('');
+}
+
+function toggleHora(centro, ipr, hora, el) {
+  const isActive = el.dataset.active === '1';
+  if (isActive) {
+    active[centro][ipr].delete(hora);
+    el.dataset.active = '0';
+    el.classList.remove('active-' + centro);
+    el.textContent = '✗ ' + hora + 'h';
+  } else {
+    active[centro][ipr].add(hora);
+    el.dataset.active = '1';
+    el.classList.add('active-' + centro);
+    el.textContent = '✓ ' + hora + 'h';
+  }
+  renderIPR(ipr);
+}
+
+function toggleAll(centro, ipr, state) {
+  const d = DATA[centro];
+  if (!d) return;
+  d.rows.forEach(r => {
+    const el = document.getElementById(`toggle-${centro}-${ipr}-${r.hora}`);
+    if (!el) return;
+    if (state) {
+      active[centro][ipr].add(r.hora);
+      el.dataset.active = '1';
+      el.classList.add('active-' + centro);
+      el.textContent = '✓ ' + r.hora + 'h';
+    } else {
+      active[centro][ipr].delete(r.hora);
+      el.dataset.active = '0';
+      el.classList.remove('active-' + centro);
+      el.textContent = '✗ ' + r.hora + 'h';
+    }
+  });
+  renderIPR(ipr);
+}
+
+// ═══════════════════════════════════════════════════════
+//  IPR RENDER HELPERS
+// ═══════════════════════════════════════════════════════
+function iprRows(centro, ipr) {
+  const d = DATA[centro];
+  if (!d) return [];
+  return d.rows.filter(r => active[centro][ipr].has(r.hora));
+}
+
+// ── IPR02-1 ──
+function renderIPR01() {
+  const rmaD = DATA.rma; const rseD = DATA.rse;
+
+  const thead = `<thead><tr>
+    <th class="center">Hora</th>
+    <th>LL.A.</th>
+    <th title="LL.E.D. - LL.N.A. con TES&lt;12''">Base</th>
+    <th>IPR02-1 %<br><small style="font-weight:400;color:#8a96a8">obj. ≥ 98,50%</small></th>
+  </tr></thead>`;
+
+  function buildIPR01Table(rows, d) {
+    if (!d) return '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div>Sin datos cargados</div></td></tr>';
+    let sumLLA = 0, sumBase = 0;
+    const bodyRows = rows.map(r => {
+      const lla  = r.LLA  || 0;
+      const base = r.IPR01_base || 0;
+      sumLLA += lla; sumBase += base;
+      const p = base > 0 ? lla / base * 100 : null;
+      const ok = p != null && p >= 98.50;
+      const rc = ok ? 'row-ok' : (p != null ? 'row-fail' : '');
+      return `<tr class="${rc}">
+        <td>${r.hora}h</td>
+        <td>${n0(lla)}</td>
+        <td>${n0(base)}</td>
+        <td class="pct-cell ${ipr01Class(p)}">${pct(p)}</td>
+      </tr>`;
+    }).join('');
+    const totP = sumBase > 0 ? sumLLA / sumBase * 100 : null;
+    const totOk = totP != null && totP >= 98.50;
+    const totRc = totOk ? 'row-ok' : (totP != null ? 'row-fail' : '');
+    return bodyRows + `<tr class="total-row ${totRc}">
+      <td>TOTAL</td><td>${n0(sumLLA)}</td><td>${n0(sumBase)}</td>
+      <td class="pct-cell ${ipr01Class(totP)}">${totP != null ? pct(totP) : '—'}</td>
+    </tr>`;
+  }
+
+  document.getElementById('t-ipr01-rma').innerHTML = thead + '<tbody>' + buildIPR01Table(iprRows('rma','01'), rmaD) + '</tbody>';
+  document.getElementById('t-ipr01-rse').innerHTML = thead + '<tbody>' + buildIPR01Table(iprRows('rse','01'), rseD) + '</tbody>';
+
+  if (rmaD && rseD) {
+    const rmaRows = iprRows('rma','01');
+    const rseRows = iprRows('rse','01');
+    const rmaMap = Object.fromEntries(rmaRows.map(r => [r.hora, r]));
+    const rseMap = Object.fromEntries(rseRows.map(r => [r.hora, r]));
+    const horasAnd = Array.from(new Set([...rmaRows.map(r=>r.hora),...rseRows.map(r=>r.hora)])).sort();
+    let totLLA=0, totBase=0;
+    const body = horasAnd.map(h => {
+      const rm = rmaMap[h]; const rs = rseMap[h];
+      const lla  = (rm?.LLA||0)         + (rs?.LLA||0);
+      const base = (rm?.IPR01_base||0)  + (rs?.IPR01_base||0);
+      totLLA += lla; totBase += base;
+      const p = base > 0 ? lla/base*100 : null;
+      const rc = p != null ? (p >= 98.50 ? 'row-ok' : 'row-fail') : '';
+      return `<tr class="${rc}"><td>${h}h</td><td>${n0(lla)}</td><td>${n0(base)}</td>
+        <td class="pct-cell ${ipr01Class(p)}">${pct(p)}</td></tr>`;
+    }).join('');
+    const totP = totBase > 0 ? totLLA/totBase*100 : null;
+    const totRc = totP != null ? (totP >= 98.50 ? 'row-ok' : 'row-fail') : '';
+    document.getElementById('t-ipr01-and').innerHTML = thead + '<tbody>' + body +
+      `<tr class="total-row ${totRc}"><td>TOTAL</td><td>${n0(totLLA)}</td><td>${n0(totBase)}</td>
+       <td class="pct-cell ${ipr01Class(totP)}">${totP != null ? pct(totP) : '—'}</td></tr></tbody>`;
+  } else {
+    document.getElementById('t-ipr01-and').innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📊</div>Carga RMA y RSE</div></td></tr>`;
+  }
+}
+
+// ── IPR02-3 ──
+function renderIPR03() {
+  const thead = `<thead><tr>
+    <th class="center">Hora</th>
+    <th>LL.A.</th>
+    <th>T.T.R.C. (seg)</th>
+    <th>T.M.R.C.″<br><small style="font-weight:400;color:#8a96a8">obj. ≤ 5,00″</small></th>
+  </tr></thead>`;
+
+  function buildIPR03Table(rows, d) {
+    if (!d) return '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div>Sin datos cargados</div></td></tr>';
+    let sumLLA=0, sumTTRC=0;
+    const bodyRows = rows.map(r => {
+      const lla  = r.LLA  || 0;
+      const ttrc = r.TTRC || 0;
+      sumLLA += lla; sumTTRC += ttrc;
+      const tmrc = r.TMRC;
+      const ok = tmrc != null && tmrc <= 5;
+      const rc = tmrc != null ? (ok ? 'row-ok' : 'row-fail') : '';
+      return `<tr class="${rc}">
+        <td>${r.hora}h</td>
+        <td>${n0(lla)}</td>
+        <td>${n0(ttrc)}</td>
+        <td class="pct-cell ${ipr03Class(tmrc)}">${n2(tmrc)}</td>
+      </tr>`;
+    }).join('');
+    const totTMRC = sumLLA > 0 ? sumTTRC / sumLLA : null;
+    const totOk = totTMRC != null && totTMRC <= 5;
+    const totRc = totTMRC != null ? (totOk ? 'row-ok' : 'row-fail') : '';
+    return bodyRows + `<tr class="total-row ${totRc}">
+      <td>TOTAL</td><td>${n0(sumLLA)}</td><td>${n0(sumTTRC)}</td>
+      <td class="pct-cell ${ipr03Class(totTMRC)}">${totTMRC != null ? n2(totTMRC) : '—'}</td>
+    </tr>`;
+  }
+
+  document.getElementById('t-ipr03-rma').innerHTML = thead + '<tbody>' + buildIPR03Table(iprRows('rma','03'), DATA.rma) + '</tbody>';
+  document.getElementById('t-ipr03-rse').innerHTML = thead + '<tbody>' + buildIPR03Table(iprRows('rse','03'), DATA.rse) + '</tbody>';
+
+  const rmaD = DATA.rma; const rseD = DATA.rse;
+  if (rmaD && rseD) {
+    const rmaRows = iprRows('rma','03');
+    const rseRows = iprRows('rse','03');
+    const rmaMap = Object.fromEntries(rmaRows.map(r => [r.hora, r]));
+    const rseMap = Object.fromEntries(rseRows.map(r => [r.hora, r]));
+    const horasAnd = Array.from(new Set([...rmaRows.map(r=>r.hora),...rseRows.map(r=>r.hora)])).sort();
+    let totLLA=0, totTTRC=0;
+    const body = horasAnd.map(h => {
+      const rm = rmaMap[h]; const rs = rseMap[h];
+      const lla  = (rm?.LLA||0)  + (rs?.LLA||0);
+      const ttrc = (rm?.TTRC||0) + (rs?.TTRC||0);
+      const tmrc = lla > 0 ? ttrc/lla : null;
+      totLLA += lla; totTTRC += ttrc;
+      const rc = tmrc != null ? (tmrc <= 5 ? 'row-ok' : 'row-fail') : '';
+      return `<tr class="${rc}"><td>${h}h</td><td>${n0(lla)}</td><td>${n0(ttrc)}</td>
+        <td class="pct-cell ${ipr03Class(tmrc)}">${n2(tmrc)}</td></tr>`;
+    }).join('');
+    const totTMRC = totLLA > 0 ? totTTRC/totLLA : null;
+    const totRc = totTMRC != null ? (totTMRC <= 5 ? 'row-ok' : 'row-fail') : '';
+    document.getElementById('t-ipr03-and').innerHTML = thead + '<tbody>' + body +
+      `<tr class="total-row ${totRc}"><td>TOTAL</td><td>${n0(totLLA)}</td><td>${n0(totTTRC)}</td>
+       <td class="pct-cell ${ipr03Class(totTMRC)}">${totTMRC != null ? n2(totTMRC) : '—'}</td></tr></tbody>`;
+  } else {
+    document.getElementById('t-ipr03-and').innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📊</div>Carga RMA y RSE</div></td></tr>`;
+  }
+}
+
+// ── IPR02-4 ──
+function renderIPR04() {
+  const thead = `<thead><tr>
+    <th class="center">Hora</th>
+    <th>LL.A.</th>
+    <th>TRC &lt; 10″</th>
+    <th>IPR02-4 %<br><small style="font-weight:400;color:#8a96a8">obj. ≥ 93,00%</small></th>
+  </tr></thead>`;
+
+  function buildIPR04Table(rows, d) {
+    if (!d) return '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div>Sin datos cargados</div></td></tr>';
+    let sumLLA=0, sumTRC=0;
+    const bodyRows = rows.map(r => {
+      const lla = r.LLA || 0;
+      const trc = r.LLA_TRC_lt10 || 0;
+      sumLLA += lla; sumTRC += trc;
+      const p = lla > 0 ? trc/lla*100 : null;
+      const ok = p != null && p >= 93;
+      const rc = p != null ? (ok ? 'row-ok' : 'row-fail') : '';
+      return `<tr class="${rc}">
+        <td>${r.hora}h</td>
+        <td>${n0(lla)}</td>
+        <td>${n0(trc)}</td>
+        <td class="pct-cell ${ipr04Class(p)}">${pct(p)}</td>
+      </tr>`;
+    }).join('');
+    const totP = sumLLA > 0 ? sumTRC/sumLLA*100 : null;
+    const totOk = totP != null && totP >= 93;
+    const totRc = totP != null ? (totOk ? 'row-ok' : 'row-fail') : '';
+    return bodyRows + `<tr class="total-row ${totRc}">
+      <td>TOTAL</td><td>${n0(sumLLA)}</td><td>${n0(sumTRC)}</td>
+      <td class="pct-cell ${ipr04Class(totP)}">${totP != null ? pct(totP) : '—'}</td>
+    </tr>`;
+  }
+
+  document.getElementById('t-ipr04-rma').innerHTML = thead + '<tbody>' + buildIPR04Table(iprRows('rma','04'), DATA.rma) + '</tbody>';
+  document.getElementById('t-ipr04-rse').innerHTML = thead + '<tbody>' + buildIPR04Table(iprRows('rse','04'), DATA.rse) + '</tbody>';
+
+  const rmaD = DATA.rma; const rseD = DATA.rse;
+  if (rmaD && rseD) {
+    const rmaRows = iprRows('rma','04');
+    const rseRows = iprRows('rse','04');
+    const rmaMap = Object.fromEntries(rmaRows.map(r => [r.hora, r]));
+    const rseMap = Object.fromEntries(rseRows.map(r => [r.hora, r]));
+    const horasAnd = Array.from(new Set([...rmaRows.map(r=>r.hora),...rseRows.map(r=>r.hora)])).sort();
+    let totLLA=0, totTRC=0;
+    const body = horasAnd.map(h => {
+      const rm = rmaMap[h]; const rs = rseMap[h];
+      const lla = (rm?.LLA||0) + (rs?.LLA||0);
+      const trc = (rm?.LLA_TRC_lt10||0) + (rs?.LLA_TRC_lt10||0);
+      const p = lla > 0 ? trc/lla*100 : null;
+      totLLA += lla; totTRC += trc;
+      const rc = p != null ? (p >= 93 ? 'row-ok' : 'row-fail') : '';
+      return `<tr class="${rc}"><td>${h}h</td><td>${n0(lla)}</td><td>${n0(trc)}</td>
+        <td class="pct-cell ${ipr04Class(p)}">${pct(p)}</td></tr>`;
+    }).join('');
+    const totP = totLLA > 0 ? totTRC/totLLA*100 : null;
+    const totRc = totP != null ? (totP >= 93 ? 'row-ok' : 'row-fail') : '';
+    document.getElementById('t-ipr04-and').innerHTML = thead + '<tbody>' + body +
+      `<tr class="total-row ${totRc}"><td>TOTAL</td><td>${n0(totLLA)}</td><td>${n0(totTRC)}</td>
+       <td class="pct-cell ${ipr04Class(totP)}">${totP != null ? pct(totP) : '—'}</td></tr></tbody>`;
+  } else {
+    document.getElementById('t-ipr04-and').innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📊</div>Carga RMA y RSE</div></td></tr>`;
+  }
+}
+
+function renderIPR(ipr) {
+  if (ipr === '01') renderIPR01();
+  if (ipr === '03') renderIPR03();
+  if (ipr === '04') renderIPR04();
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFRESH ALL
+// ═══════════════════════════════════════════════════════
+function refreshAll() {
+  // Update fecha display
+  const fechas = [];
+  if (DATA.rma?.fecha) fechas.push('RMA ' + DATA.rma.fecha);
+  if (DATA.rse?.fecha) fechas.push('RSE ' + DATA.rse.fecha);
+  document.getElementById('fechaDisplay').textContent = fechas.join(' · ') || 'Sin datos cargados';
+
+  // Render main tables
+  renderMainTable('rma');
+  renderMainTable('rse');
+
+  // Rebuild toggles
+  ['01','03','04'].forEach(ipr => {
+    ['rma','rse'].forEach(centro => buildToggles(centro, ipr));
+  });
+
+  // Render IPR tables
+  renderIPR01(); renderIPR03(); renderIPR04();
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT — arrancar sin datos
+// ═══════════════════════════════════════════════════════
+// Drag & drop
+['rma','rse'].forEach(centro => {
+  const zone = document.getElementById('drop-' + centro);
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = document.getElementById('file-' + centro);
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      loadFile(centro, input);
+    }
+  });
+});
+
+// Render inicial vacío
+renderIPR01(); renderIPR03(); renderIPR04();
+</script>
+</body>
+</html>
